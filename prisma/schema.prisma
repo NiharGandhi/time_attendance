@@ -1,0 +1,116 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkOrganizationId   String    @unique()
+  name                  String    @map("OrgName")
+  logo                  String    @map("OrgLogo")
+  colorScheme           String    @map("OrgColorScheme")
+  timezone              String?
+  location              String?
+  dateFormat            String?
+
+  members               OrgMembers[]
+  leaves                Leaves[]
+  departments           Departments[]
+  shifts                Shifts[]
+}
+
+model OrgMembers {
+  id                       String            @id @default(auto()) @map("_id") @db.ObjectId
+  
+  memberName               String           
+  memberRole               Role              
+  memberStatus             String            
+  memberEmail              String            @unique
+  memberPhone              String?           
+
+  clerkOrganizationId      String          
+  memberOrg                Organization      @relation(fields: [clerkOrganizationId], references: [clerkOrganizationId])
+
+  memberLeaves             MemberLeaves[]
+
+  memberShifts             MemberShifts[]
+
+  departmentId             String           @db.ObjectId
+  department               Departments      @relation(fields: [departmentId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  DEPARTMENTHEAD
+  EMPLOYEE
+}
+
+model Departments {
+  id                      String            @id @default(auto()) @map("_id") @db.ObjectId
+  departmentName          String
+
+  clerkOrganizationId     String
+  organization            Organization      @relation(fields: [clerkOrganizationId], references: [clerkOrganizationId])
+  shifts                  Shifts[]
+
+  members                 OrgMembers[]
+}
+
+model Leaves {
+  id                      String            @id @default(auto()) @map("_id") @db.ObjectId
+  leaveTitle              String
+  leaveDescription        String
+  leaveDays               Int
+  carryOverDays           Int
+  isActive                Boolean           @default(true)
+  clerkOrganizationId     String
+  leaveOrg                Organization      @relation(fields: [clerkOrganizationId], references: [clerkOrganizationId])
+
+  memberLeaves            MemberLeaves[]
+}
+
+model MemberLeaves {
+  id                 String           @id @default(auto()) @map("_id") @db.ObjectId
+  memberId           String           @db.ObjectId
+  leaveId            String           @db.ObjectId
+  leaveName          String
+
+  member             OrgMembers       @relation(fields: [memberId], references: [id])
+  leave              Leaves           @relation(fields: [leaveId], references: [id]) 
+}
+
+model Shifts {
+  id                      String            @id @default(auto()) @map("_id") @db.ObjectId
+  shiftTitle              String
+  shiftDescription        String?
+  shiftStartTime          String
+  shiftEndTime            String
+  shiftStartDate          String
+  shiftEndDate            String            // Consider a more detailed representation if needed (e.g., Enum or JSON array)
+  isActive                Boolean           @default(true)
+  shiftLocation           String?
+
+  clerkOrganizationId     String
+  organization            Organization      @relation(fields: [clerkOrganizationId], references: [clerkOrganizationId])
+
+  departmentId            String            @db.ObjectId
+  department              Departments       @relation(fields: [departmentId], references: [id])
+
+  memberShifts            MemberShifts[]
+}
+
+model MemberShifts {
+  id                 String           @id @default(auto()) @map("_id") @db.ObjectId
+  memberId           String           @db.ObjectId
+  shiftId            String           @db.ObjectId
+  shiftName          String
+
+  member             OrgMembers       @relation(fields: [memberId], references: [id])
+  shift              Shifts           @relation(fields: [shiftId], references: [id])
+}

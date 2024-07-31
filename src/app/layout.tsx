@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
+import SideNav from "@/components/navbar/side-nav";
+import MarginWidthWrapper from "@/components/wrappers/margin-width-wrapper";
+import Header from "@/components/headers/header";
+import HeaderMobile from "@/components/headers/header-mobile";
+import PageWrapper from "@/components/wrappers/page-wrapper";
 
 const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,8 +22,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`bg-white ${outfit.className}`}>
+          <div className="flex">
+            <SideNav />
+            <main className="flex-1">
+              <MarginWidthWrapper>
+                <Header />
+                <HeaderMobile />
+                <PageWrapper>{children}</PageWrapper>
+              </MarginWidthWrapper>
+            </main>
+          </div>
+        </body>
+      </html>
+
+    </ClerkProvider>
   );
 }
